@@ -2,15 +2,83 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTFF-8">
-    <meta name="viewport"content="width=device-width, initia-scale=1.o">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Manager</title>
-    <script src=""> </script>
-
-
-    <body>
-        <section>
-
-
+    <link rel="stylesheet" href="/style.css">
 </head>
+
+<body>
+    <header id="mainHeader">
+        <h1>Event Guest List Manager</h1>
+    </header>
+
+    <section>
+        <h1>Entry Form</h1>
+        <form action="">
+            <div class="entryForm">
+                <label for="guestName">Enter Guest Name:</label>
+                <input type="text" name="Guest Name" id="guestName" placeholder="Input name here.." required />
+            </div>
+            <div class="entryForm">
+                <label for="category">Category:</label>
+                <select id="category" name="category">
+                    <option selected>Choose Category</option>
+                    <option value="family">Family</option>
+                    <option value="friends">Friends</option>
+                    <option value="colleagues">Colleagues</option>
+                </select>
+            </div>
+            <button type="submit" id="submitButton">Submit</button>
+        </form>
+    </section>
+
+    <section>
+        <h1 id="listHeader">Guest List</h1>
+        <h2 class="guestHeader">Family List</h2>
+        <div class="guestList">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Time Added</th>
+                        <th scope="col">Guest Name</th>
+                        <th scope="col">RSVP</th>
+                    </tr>
+                </thead>
+                <tbody id="familyTableBody"></tbody>
+            </table>
+        </div>
+
+        <h2 class="guestHeader">Friends List</h2>
+        <div class="guestList">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Time Added</th>
+                        <th scope="col">Guest Name</th>
+                        <th scope="col">RSVP</th>
+                    </tr>
+                </thead>
+                <tbody id="friendsTableBody"></tbody>
+            </table>
+        </div>
+
+        <h2 class="guestHeader">Colleagues List</h2>
+        <div class="guestList">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Time Added</th>
+                        <th scope="col">Guest Name</th>
+                        <th scope="col">RSVP</th>
+                    </tr>
+                </thead>
+                <tbody id="colleaguesTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+<script src="/index.js"></script>
+</body>
+
 </html>
