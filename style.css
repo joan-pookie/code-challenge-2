@@ -1,0 +1,71 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f9f9f9;
+}
+
+header {
+  background-color: #6200ea;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  border-radius: 10px;
+}
+
+h1 {
+  color: #333;
+}
+
+form {
+  background: white;
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #ccc;
+}
+
+.entryForm {
+  margin-bottom: 10px;
+}
+
+input, select, button {
+  padding: 8px;
+  margin-top: 5px;
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+button {
+  background-color: #6200ea;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #3700b3;
+}
+
+table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+}
+
+#undoContainer {
+  margin-top: 10px;
+  background-color: #ffeb3b;
+  padding: 10px;
+  border-radius: 5px;
+  display: none;
+}

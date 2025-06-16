@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Guest List Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header id="mainHeader">
+    <h1>Event Guest List Manager</h1>
+  </header>
+
+  <section>
+    <h1>Entry Form</h1>
+    <form>
+      <div class="entryForm">
+        <label for="guestName">Enter Guest Name:</label>
+        <input type="text" id="guestName" placeholder="Input name here.." required />
+      </div>
+      <div class="entryForm">
+        <label for="category">Category:</label>
+        <select id="category" required>
+          <option value="" selected disabled hidden>Choose Category</option>
+          <option value="Family">Family</option>
+          <option value="Friends">Friends</option>
+          <option value="Colleagues">Colleagues</option>
+        </select>
+      </div>
+      <button type="submit" id="submitButton">Submit</button>
+    </form>
+  </section>
+
+  <section>
+    <h1>Guest List</h1>
+    <div class="guestList">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Guest Name</th>
+            <th>Time Invited</th>
+            <th>Category</th>
+            <th>RSVP</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div id="undoContainer"></div>
+  </section>
+
+  <script src="index.js"></script>
+</body>
+</html>
