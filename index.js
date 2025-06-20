@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.reset();
 
     row.querySelector('.rsvpButton').addEventListener('click', () => {
-      alert(RSVP sent to ${guestName});
+      alert(`RSVP sent to ${guestName}`);
     });
 
     row.querySelector('.deleteButton').addEventListener('click', () => {
