@@ -1,59 +1,180 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('guestForm');
-  const tableBody = document.getElementById('tableBody');
-  const undoContainer = document.getElementById('undoContainer');
-  let guestCounter = 0;
-  let lastDeletedGuest = null;
+const form = document.querySelector('form');
+const guestNameInput = document.getElementById('guestName');
+const categorySelect = document.getElementById('category');
+const tableBody = document.getElementById('tableBody');
+const slotInfo = document.getElementById('slotInfo');
+const undoContainer = document.getElementById('undoContainer');
 
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
+// Store guests by category
+const guestData = {
+  family: [],
+  friends: [],
+  colleagues: []
+};
 
-    const guestName = document.getElementById('guestName').value.trim();
-    const category = document.getElementById('category').value;
+// Temporarily store the last deleted guest
+let recentlyDeleted = null;
 
-    if (!guestName || !category) {
-      alert('Please fill in both fields.');
-      return;
-    }
+// Capitalize the first letter of each word in the name
+function capitalizeEachWord(name) {
+  return name
+    .toLowerCase()
+    .split(' ')
+    .filter(Boolean)
+    .map(word => word[0].toUpperCase() + word.slice(1))
+    .join(' ');
+}
 
-    guestCounter++;
-    const timeInvited = new Date().toLocaleTimeString();
+// ✅ Update global remaining slots counter
+function updateSlotInfo() {
+  const totalGuests = Object.values(guestData)
+    .reduce((sum, list) => sum + list.length, 0);
+  const remaining = 10 - totalGuests;
+  slotInfo.textContent = ${remaining} remaining slot${remaining === 1 ? '' : 's'};
+}
 
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${guestCounter}</td>
-      <td>${guestName}</td>
-      <td>${timeInvited}</td>
-      <td>${category}</td>
-      <td><button class="rsvpButton">RSVP</button></td>
-      <td><button class="deleteButton">Delete</button></td>
-    `;
+// Show remaining slots on category change
+categorySelect.addEventListener('change', updateSlotInfo);
 
-    tableBody.appendChild(row);
-    form.reset();
+// Handle form submission
+form.addEventListener('submit', function (e) {
+  e.preventDefault();
 
-    row.querySelector('.rsvpButton').addEventListener('click', () => {
-      alert(RSVP sent to ${guestName});
-    });
+  const guestName = capitalizeEachWord(guestNameInput.value.trim());
+  const category = categorySelect.value;
 
-    row.querySelector('.deleteButton').addEventListener('click', () => {
-      lastDeletedGuest = row;
-      tableBody.removeChild(row);
-      showUndoOption(guestName);
+  if (!guestName || !category) {
+    alert('Please enter a valid guest name and select a category.');
+    return;
+  }
+
+  const totalGuests = Object.values(guestData)
+    .reduce((sum, list) => sum + list.length, 0);
+
+  if (totalGuests >= 10) {
+    alert('Guest limit reached. Maximum of 10 guests allowed.');
+    return;
+  }
+
+  const guest = {
+    name: guestName,
+    category,
+    rsvp: '',
+    timeAdded: new Date().toLocaleString([], {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  };
+
+  guestData[category].push(guest);
+  updateTable();
+  form.reset();
+  updateSlotInfo(); // ✅ Update counter after submit
+});
+
+// Update the guest table based on current data
+function updateTable() {
+  tableBody.innerHTML = '';
+  undoContainer.innerHTML = '';
+
+  const allGuests = [];
+
+  Object.keys(guestData).forEach(category => {
+    guestData[category].forEach(guest => {
+      allGuests.push({ ...guest });
     });
   });
 
-  function showUndoOption(guestName) {
-    undoContainer.innerHTML = `
-      <p>${guestName} has been deleted. <button id="undoButton">Undo</button></p>
-    `;
+  allGuests.forEach((guest, index) => {
+    const row = document.createElement('tr');
+    row.classList.add(${guest.category}-row);
 
-    document.getElementById('undoButton').addEventListener('click', () => {
-      if (lastDeletedGuest) {
-        tableBody.appendChild(lastDeletedGuest);
-        lastDeletedGuest = null;
-        undoContainer.innerHTML = '';
+    row.innerHTML = 
+      <td>${index + 1}</td>
+      <td class="guest-name">${guest.name}</td>
+      <td>${guest.timeAdded}</td>
+      <td>${guest.category.charAt(0).toUpperCase() + guest.category.slice(1)}</td>
+      <td>
+        <select class="rsvpSelect">
+          <option value="" disabled ${guest.rsvp === '' ? 'selected' : ''} hidden>Pending</option>
+          <option value="Attending" ${guest.rsvp === 'Attending' ? 'selected' : ''}>Attending</option>
+          <option value="Not Attending" ${guest.rsvp === 'Not Attending' ? 'selected' : ''}>Not Attending</option>
+        </select>
+      </td>
+      <td>
+        <button class="editBtn" type="button">Edit</button>
+        <button class="deleteBtn" type="button">Delete</button>
+      </td>
+    ;
+
+    // Handle RSVP changes
+    row.querySelector('.rsvpSelect').addEventListener('change', function () {
+      guest.rsvp = this.value;
+    });
+
+    // Handle guest deletion
+    row.querySelector('.deleteBtn').addEventListener('click', function () {
+      const index = guestData[guest.category].findIndex(g =>
+        g.name === guest.name && g.timeAdded === guest.timeAdded
+      );
+
+      if (index !== -1) {
+        recentlyDeleted = guestData[guest.category].splice(index, 1)[0];
+        updateTable();
+        showUndoOption();
       }
     });
-  }
-});
+
+    // Handle editing guest name
+    row.querySelector('.editBtn').addEventListener('click', function () {
+      const nameCell = row.querySelector('.guest-name');
+      const oldName = nameCell.textContent;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = oldName;
+      nameCell.textContent = '';
+      nameCell.appendChild(input);
+      input.focus();
+
+      input.addEventListener('blur', () => {
+        const newName = capitalizeEachWord(input.value.trim());
+        if (newName) {
+          nameCell.textContent = newName;
+          guest.name = newName;
+        } else {
+          nameCell.textContent = oldName;
+        }
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') input.blur();
+      });
+    });
+
+    tableBody.appendChild(row);
+  });
+
+  updateSlotInfo(); // ✅ Always update counter after table refresh
+}
+
+// Show undo delete button
+function showUndoOption() {
+  if (!recentlyDeleted) return;
+
+  const undoBtn = document.createElement('button');
+  undoBtn.textContent = Undo Delete: ${recentlyDeleted.name};
+  undoBtn.addEventListener('click', () => {
+    guestData[recentlyDeleted.category].push(recentlyDeleted);
+    recentlyDeleted = null;
+    updateTable();
+  });
+
+  undoContainer.appendChild(undoBtn);
+}
+
+
+updateTable();
