@@ -1,64 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Event Manager</title>
-  <link rel="stylesheet" href="/style.css" />
+  <title>Guest List Manager</title>
+  <style>
+    body { font-family: sans-serif; }
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 6px; }
+    .entryForm { margin-bottom: 10px; }
+    #slotInfo { margin-bottom: 10px; color: green; }
+  </style>
 </head>
-
 <body>
-  <header id="mainHeader">
-    <h1>Event Guest List Manager</h1>
-  </header>
+  <h1>Event Guest List Manager</h1>
 
-  <section>
-    <h1>Entry Form</h1>
-    <form>
-      <div class="entryForm">
-        <label for="guestName">Enter Guest Name:</label>
-        <input type="text" id="guestName" placeholder="Input name here.." required />
-      </div>
-      <div class="entryForm">
-        <label for="category">Category:</label>
-        <select id="category" required>
-          <option value="" selected disabled hidden>Choose Category</option>
-          <option value="family">Family</option>
-          <option value="friends">Friends</option>
-          <option value="colleagues">Colleagues</option>
-        </select>
-      </div>
-      <!-- Remaining slots info will appear here -->
-      <div id="slotInfo"></div>
-
-      <button type="submit" id="submitButton">Submit</button>
-    </form>
-  </section>
-
-  <section>
-    <h1 id="listHeader">Guest List</h1>
-    <div class="guestList">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Guest Name</th>
-            <th>Time Invited</th>
-            <th>Category</th>
-            <th>RSVP</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+  <form id="guestForm">
+    <div class="entryForm">
+      <label for="guestName">Guest Name:</label>
+      <input type="text" id="guestName" required />
     </div>
+    <div class="entryForm">
+      <label for="category">Category:</label>
+      <select id="category" required>
+        <option value="">Select</option>
+        <option value="family">Family</option>
+        <option value="friends">Friends</option>
+        <option value="colleagues">Colleagues</option>
+      </select>
+    </div>
+    <div id="slotInfo">10 remaining slots</div>
+    <button type="submit">Add Guest</button>
+  </form>
 
-    <!-- Undo delete option will show here -->
-    <div id="undoContainer"></div>
-  </section>
+  <h2>Guest List</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Time Invited</th>
+        <th>Category</th>
+        <th>RSVP</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
 
-  <script src="/src/index.js"></script>
+  <div id="undoContainer"></div>
+
+  <script>
+    const form = document.querySelector('form');
+    const guestNameInput = document.getElementById('guestName');
+    const categorySelect = document.getElementById('category');
+    const tableBody = document.getElementById('tableBody');
+    const slotInfo = document.getElementById('slotInfo');
+    const undoContainer = document.getElementById('undoContainer');
+
+    const guestData = { family: [], friends: [], colleagues: [] };
+    let recentlyDeleted = null;
+
+    function capitalizeEachWord(name) {
+      return name
+        .toLowerCase()
+        .split(' ')
+        .filter(Boolean)
+        .map(word => word[0].toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+
+    function updateSlotInfo() {
+      const totalGuests = Object.values(guestData).reduce((sum, list) => sum + list.length, 0);
+      const remaining = 10 - totalGuests;
+      slotInfo.textContent = `${remaining} remaining slot${remaining === 1 ? '' : 's'}`;
+    }
+
+    categorySelect.addEventListener('change', updateSlotInfo);
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const guestName = capitalizeEachWord(guestNameInput.value.trim());
+      const category = categorySelect.value;
+
+      if (!guestName || !category) {
+        alert('Please enter a valid guest name and select a category.');
+        return;
+      }
+
+      const totalGuests = Object.values(guestData).reduce((sum, list) => sum + list.length, 0);
+      if (totalGuests >= 10) {
+        alert('Guest limit reached. Max 10 guests.');
+        return;
+      }
+
+      const guest = {
+        name: guestName,
+        category,
+        rsvp: '',
+        timeAdded: new Date().toLocaleTimeString()
+      };
+
+      guestData[category].push(guest);
+      updateTable();
+      form.reset();
+      updateSlotInfo();
+    });
+
+    function updateTable() {
+      tableBody.innerHTML = '';
+      undoContainer.innerHTML = '';
+
+      const allGuests = [];
+      Object.keys(guestData).forEach(category => {
+        guestData[category].forEach(guest => {
+          allGuests.push({ ...guest });
+        });
+      });
+
+      allGuests.forEach((guest, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td class="guest-name">${guest.name}</td>
+          <td>${guest.timeAdded}</td>
+          <td>${guest.category}</td>
+          <td>
+            <select class="rsvpSelect">
+              <option value="" disabled ${guest.rsvp === '' ? 'selected' : ''}>Pending</option>
+              <option value="Attending" ${guest.rsvp === 'Attending' ? 'selected' : ''}>Attending</option>
+              <option value="Not Attending" ${guest.rsvp === 'Not Attending' ? 'selected' : ''}>Not Attending</option>
+            </select>
+          </td>
+          <td>
+            <button class="deleteBtn" type="button">Delete</button>
+          </td>
+        `;
+
+        row.querySelector('.rsvpSelect').addEventListener('change', function () {
+          guest.rsvp = this.value;
+        });
+
+        row.querySelector('.deleteBtn').addEventListener('click', function () {
+          const index = guestData[guest.category].findIndex(g =>
+            g.name === guest.name && g.timeAdded === guest.timeAdded
+          );
+          if (index !== -1) {
+            recentlyDeleted = guestData[guest.category].splice(index, 1)[0];
+            updateTable();
+            showUndoOption();
+          }
+        });
+
+        tableBody.appendChild(row);
+      });
+
+      updateSlotInfo();
+    }
+
+    function showUndoOption() {
+      if (!recentlyDeleted) return;
+
+      const undoBtn = document.createElement('button');
+      undoBtn.textContent = `Undo Delete: ${recentlyDeleted.name}`;
+      undoBtn.addEventListener('click', () => {
+        guestData[recentlyDeleted.category].push(recentlyDeleted);
+        recentlyDeleted = null;
+        updateTable();
+      });
+
+      undoContainer.appendChild(undoBtn);
+    }
+
+    // Initialize
+    updateTable();
+  </script>
 </body>
-
 </html>
